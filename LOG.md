@@ -9,4 +9,6 @@ Plans and changes, newest at the bottom. Anyone (or their agent) can add entries
   day is a loss, daily winner = most points that day, monthly reset, past months kept.
 - Learned that Snapchat can't be read by outside apps, so results come from pasted share text.
 - Wrote `PLAN.md`, `CLAUDE.md` and this log (drafted with Claude). Still looking for a teammate.
-- Open: daily and monthly tiebreakers, Daily Tens and Krillion share-text formats (see PLAN.md).
+- Got real Daily Tens and Krillion share texts from the group chat and added their formats to
+  PLAN.md. Puzzle numbers decide the day, so late pastes still count for the right day.
+- Open: daily and monthly tiebreakers (see PLAN.md).

@@ -18,8 +18,11 @@ from Snapchat.
 |---|---|---|
 | Wordle | fewest guesses (X = failed) | `Wordle 1,234 3/6` |
 | Connections | fewest mistakes | count of mixed-color rows |
-| Daily Tens | most right | TODO: need a sample share text |
-| Krillion | highest score | TODO: need a sample share text |
+| Daily Tens | most right (out of 10) | `DailyTens #916`, then count the 🏆 (right) vs ❌ (wrong) |
+| Krillion | highest score | `Krillion #116 🦐`, score is the number on the next line (`210`) |
+
+Every game's first line carries a puzzle number, so a result counts for that puzzle's day even
+if it is pasted after midnight. Extra lines (links, emoji rows) are ignored.
 
 More games can be added later. Each game is one parser and one "which result is best" rule.
 
