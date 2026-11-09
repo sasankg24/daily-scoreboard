@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daily Scoreboard</title>
+  <meta name="description" content="Daily game results and monthly scoreboards for our friend group.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Daily Scoreboard</h1>
+    <p class="sub">Play, tap Share, paste it here.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Play today's games</h2>
+      <div id="game-links" class="game-links"></div>
+    </section>
+
+    <section class="card">
+      <h2>Add a result</h2>
+      <form id="add-form">
+        <label>Who played
+          <div class="row">
+            <select id="player-select" required></select>
+            <button type="button" id="new-player-btn" class="ghost">+ Player</button>
+          </div>
+        </label>
+        <div id="new-player-row" class="row hidden">
+          <input id="new-player-name" type="text" placeholder="Name" maxlength="20" autocomplete="off">
+          <button type="button" id="save-player-btn">Add</button>
+        </div>
+        <label>Day
+          <input id="add-date" type="date" required>
+        </label>
+        <label>Share text
+          <textarea id="share-text" rows="6" placeholder="Paste the result you copied from the game's Share button" required></textarea>
+        </label>
+        <button type="submit" class="primary">Save result</button>
+        <p id="add-message" class="message" role="status"></p>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="heading-row">
+        <h2>Day</h2>
+        <input id="day-date" type="date" aria-label="Day to show">
+      </div>
+      <div id="day-view"></div>
+    </section>
+
+    <section class="card">
+      <div class="heading-row">
+        <h2>Month</h2>
+        <select id="month-select" aria-label="Month to show"></select>
+      </div>
+      <div id="month-view"></div>
+    </section>
+
+    <section class="card">
+      <h2>Rules</h2>
+      <ul class="rules">
+        <li>Each game, each day, the best result wins: fewest guesses (Wordle), fewest mistakes (Connections), most right (Daily Tens), highest score (Krillion).</li>
+        <li>A solo win is <strong>2 points</strong>. Tied winners get <strong>1 point</strong> each.</li>
+        <li>Miss a game and you lose it for that day. A failed game can't win.</li>
+        <li>The day's winner has the most points that day.</li>
+        <li>Points reset on the 1st. Past months stay here.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Data</h2>
+      <p class="note">Results are saved in this browser. Export a backup now and then, or to move them to another phone.</p>
+      <div class="row wrap">
+        <button type="button" id="export-btn" class="ghost">Export backup</button>
+        <label class="ghost button-like">Import backup
+          <input id="import-file" type="file" accept="application/json" class="hidden">
+        </label>
+      </div>
+      <p id="data-message" class="message" role="status"></p>
+    </section>
+  </main>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
