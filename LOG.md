@@ -30,3 +30,11 @@ Plans and changes, newest at the bottom. Anyone (or their agent) can add entries
   points); people tied for the most points in a day are all shown as day winners until the group
   decides (Q1); monthly standings break ties by game wins, then name, but tied leaders are all
   shown as winners (Q2).
+
+## 2026-11-15: Artifact 5 (moonshot) starts
+- Chose to continue the Daily Scoreboard as my Artifact 5 moonshot, working solo.
+- Wrote `docs/moonshot-plan.md` (drafted with Claude): the v2 goal (each friend submits from
+  their own phone to a shared, deployed scoreboard, plus AI screenshot reading), five weekly
+  milestones, open decisions (backend, identity, AI model) and risks.
+- Next (Week 2): pick the backend, move results into a shared database, deploy, and get two
+  friends submitting from their own phones.

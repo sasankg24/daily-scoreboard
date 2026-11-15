@@ -1,8 +1,9 @@
 # Daily Scoreboard
 
 A site where a group of friends paste their daily game results (Wordle, Connections, Daily Tens,
-Krillion) and see daily winners and monthly scoreboards. `PLAN.md` is the source of truth for
-what to build, the scoring rules (R1 to R6), and who owns which piece. Read it first.
+Krillion) and see daily winners and monthly scoreboards. `PLAN.md` holds the scoring rules
+(R1 to R6). `docs/moonshot-plan.md` is the plan for version 2 (TCSS 490 Artifact 5): shared
+data, deployment, and AI screenshot reading, week by week. Read both first.
 
 ## Working on a team
 - Several people, each with their own agent, work in this repository. Agents do not talk to
