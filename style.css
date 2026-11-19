@@ -101,3 +101,6 @@ tr.winner td { background: var(--win-bg); font-weight: 600; }
 .status.live::before { content: "● "; color: var(--accent); }
 .status.error { color: var(--error); }
 .playing-as { margin: 0 0 12px; }
+.row button.primary { width: auto; flex: 1; }
+.row button.ghost { flex: 1; }
+button:disabled { opacity: 0.6; cursor: default; }

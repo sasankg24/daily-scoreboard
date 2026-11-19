@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resultId, toResultDoc, toEntries, nameProblem } from "../src/records.js";
+import { resultId, toResultDoc, toEntries, loginEmail, signUpProblem, authMessage } from "../src/records.js";
 import { parseShare } from "../src/parsers.js";
 
 test("result id is date_game_uid, one per player per game per day", () => {
@@ -34,11 +34,22 @@ test("malformed documents are skipped instead of breaking the scoreboard", () =>
   assert.equal(toEntries([null, { game: "chess", date: "2026-11-18" }, { game: "wordle" }], {}).length, 0);
 });
 
-test("names must be present, short, and unique ignoring case", () => {
-  const names = { a: "Sasank", b: "Zach" };
-  assert.equal(nameProblem("  ", "c", names), "Enter a name.");
-  assert.match(nameProblem("x".repeat(21), "c", names), /20 characters/);
-  assert.match(nameProblem("zach", "c", names), /already/);
-  assert.equal(nameProblem("Zach", "b", names), "");
-  assert.equal(nameProblem("Ben", "c", names), "");
+test("a name maps to one private login address, ignoring case and spaces around it", () => {
+  assert.equal(loginEmail("Sasank"), "sasank@users.daily-scoreboard.app");
+  assert.equal(loginEmail("  sasank "), loginEmail("SASANK"));
+});
+
+test("sign-up checks the name and password before contacting Firebase", () => {
+  assert.equal(signUpProblem("", "secret1"), "Enter a name.");
+  assert.match(signUpProblem("x".repeat(21), "secret1"), /20 characters/);
+  assert.match(signUpProblem("Big Z", "secret1"), /no spaces/);
+  assert.match(signUpProblem("a@b", "secret1"), /no spaces/);
+  assert.match(signUpProblem("Zach", "12345"), /at least 6/);
+  assert.equal(signUpProblem("Zach_99", "123456"), "");
+});
+
+test("sign-in errors become plain messages", () => {
+  assert.match(authMessage("auth/invalid-credential"), /don't match/);
+  assert.match(authMessage("auth/email-already-in-use"), /already has that name/);
+  assert.match(authMessage("auth/something-new"), /something-new/);
 });
