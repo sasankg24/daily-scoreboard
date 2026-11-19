@@ -11,6 +11,7 @@
   <header class="top">
     <h1>Daily Scoreboard</h1>
     <p class="sub">Play, tap Share, paste it here.</p>
+    <p id="status" class="status">Connecting…</p>
   </header>
 
   <main>
@@ -19,19 +20,21 @@
       <div id="game-links" class="game-links"></div>
     </section>
 
-    <section class="card">
-      <h2>Add a result</h2>
+    <section class="card hidden" id="name-card">
+      <h2>What's your name?</h2>
+      <p class="note">Pick the name your friends know you by. This phone remembers it, and only this phone can post results as you.</p>
+      <form id="name-form" class="row">
+        <input id="name-input" type="text" placeholder="Your name" maxlength="20" autocomplete="off" required>
+        <button type="submit">Save</button>
+      </form>
+      <p id="name-message" class="message" role="status"></p>
+    </section>
+
+    <section class="card" id="add-card">
+      <h2>Add your result</h2>
       <form id="add-form">
-        <label>Who played
-          <div class="row">
-            <select id="player-select" required></select>
-            <button type="button" id="new-player-btn" class="ghost">+ Player</button>
-          </div>
-        </label>
-        <div id="new-player-row" class="row hidden">
-          <input id="new-player-name" type="text" placeholder="Name" maxlength="20" autocomplete="off">
-          <button type="button" id="save-player-btn">Add</button>
-        </div>
+        <p class="playing-as">Playing as <strong id="me-name">…</strong>
+          <button type="button" id="rename-btn" class="small">change</button></p>
         <label>Day
           <input id="add-date" type="date" required>
         </label>
@@ -72,12 +75,9 @@
 
     <section class="card">
       <h2>Data</h2>
-      <p class="note">Results are saved in this browser. Export a backup now and then, or to move them to another phone.</p>
+      <p class="note">Results are shared with everyone in the group. You can only add or remove your own. Export saves a copy of everything to this device.</p>
       <div class="row wrap">
         <button type="button" id="export-btn" class="ghost">Export backup</button>
-        <label class="ghost button-like">Import backup
-          <input id="import-file" type="file" accept="application/json" class="hidden">
-        </label>
       </div>
       <p id="data-message" class="message" role="status"></p>
     </section>
