@@ -1,34 +1,15 @@
-// The page: paste box, day view and month view. Parsing and scoring live in their own modules.
+// The page: name, paste box, day view and month view. Parsing and scoring live in their own
+// modules, the database in store.js. Results are shared live with the whole group.
 
 import { GAMES, parseShare, describeResult } from "./parsers.js";
-import { dayResults, monthStandings, monthsWithResults, addEntry } from "./scoring.js";
-
-const STORAGE_KEY = "daily-scoreboard-v1";
-const LAST_PLAYER_KEY = "daily-scoreboard-last-player";
+import { dayResults, monthStandings, monthsWithResults } from "./scoring.js";
+import { toEntries, nameProblem } from "./records.js";
+import { connect, currentUid, saveName, saveResult, removeResult } from "./store.js";
 
 const $ = (id) => document.getElementById(id);
 
-function load() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (saved && Array.isArray(saved.players) && Array.isArray(saved.entries)) {
-      return saved;
-    }
-  } catch {
-    // Storage blocked or corrupt: start empty.
-  }
-  return { players: [], entries: [] };
-}
-
-let state = load();
-
-function save() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    showMessage("data-message", "Couldn't save in this browser. Export a backup.", true);
-  }
-}
+// Live state from the database.
+const state = { uid: null, namesByUid: {}, resultDocs: [], entries: [], players: [] };
 
 function today() {
   return new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
@@ -44,6 +25,12 @@ function showMessage(id, text, isError = false) {
   el.className = `message ${isError ? "error" : "ok"}`;
 }
 
+function setStatus(text, kind = "") {
+  const el = $("status");
+  el.textContent = text;
+  el.className = `status ${kind}`;
+}
+
 function names(list) {
   return list.map(escapeHtml).join(" & ");
 }
@@ -51,6 +38,10 @@ function names(list) {
 function monthLabel(month) {
   const [y, m] = month.split("-").map(Number);
   return new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+}
+
+function myName() {
+  return state.namesByUid[state.uid] || "";
 }
 
 // ---- Rendering ----
@@ -61,17 +52,12 @@ function renderGameLinks() {
     .join("");
 }
 
-function renderPlayers() {
-  const select = $("player-select");
-  let last = "";
-  try { last = localStorage.getItem(LAST_PLAYER_KEY) || ""; } catch { /* ignore */ }
-  const current = select.value || last;
-  select.innerHTML = state.players.length
-    ? state.players.map((p) => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("")
-    : `<option value="">Add a player first</option>`;
-  if (state.players.includes(current)) {
-    select.value = current;
-  }
+function renderName() {
+  const named = Boolean(myName());
+  // Until sign-in finishes, show neither card.
+  $("name-card").classList.toggle("hidden", !state.uid || named);
+  $("add-card").classList.toggle("hidden", !state.uid || !named);
+  $("me-name").textContent = myName();
 }
 
 function renderDay() {
@@ -99,11 +85,12 @@ function renderDay() {
         <tr class="${result.winners.includes(e.player) ? "winner" : ""}">
           <td>${escapeHtml(e.player)}</td>
           <td class="num">${escapeHtml(describeResult(e))}</td>
-          <td class="num"><button class="small" data-remove="${escapeHtml(e.player)}|${game}|${date}" aria-label="Remove">✕</button></td>
+          <td class="num">${e.uid === state.uid
+            ? `<button class="small" data-remove="${game}|${date}" aria-label="Remove my result">✕</button>` : ""}</td>
         </tr>`).join("")}</tbody></table>`;
   }
 
-  const missing = state.players.filter((p) => !day.points[p] && !state.entries.some((e) => e.date === date && e.player === p));
+  const missing = state.players.filter((p) => !state.entries.some((e) => e.date === date && e.player === p));
   if (missing.length) {
     html += `<p class="note" style="margin-top:10px">No results yet from ${names(missing)}.</p>`;
   }
@@ -144,72 +131,75 @@ function renderMonths() {
   $("month-view").innerHTML = html;
 }
 
-function renderAll() {
-  renderPlayers();
+function refresh() {
+  state.players = Object.values(state.namesByUid).sort((a, b) => a.localeCompare(b));
+  state.entries = toEntries(state.resultDocs, state.namesByUid);
+  renderName();
   renderDay();
   renderMonths();
 }
 
 // ---- Events ----
 
-$("new-player-btn").addEventListener("click", () => {
-  $("new-player-row").classList.toggle("hidden");
-  $("new-player-name").focus();
-});
-
-$("save-player-btn").addEventListener("click", () => {
-  const name = $("new-player-name").value.trim();
-  if (!name) {
-    return;
-  }
-  if (!state.players.some((p) => p.toLowerCase() === name.toLowerCase())) {
-    state.players.push(name);
-    save();
-  }
-  $("new-player-name").value = "";
-  $("new-player-row").classList.add("hidden");
-  renderAll();
-  $("player-select").value = name;
-});
-
-$("add-form").addEventListener("submit", (event) => {
+$("name-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const player = $("player-select").value;
-  if (!player) {
-    showMessage("add-message", "Add a player first (+ Player).", true);
+  const name = $("name-input").value.trim();
+  const problem = nameProblem(name, state.uid, state.namesByUid);
+  if (problem) {
+    showMessage("name-message", problem, true);
     return;
   }
+  try {
+    await saveName(name);
+    showMessage("name-message", "");
+  } catch (error) {
+    showMessage("name-message", `Couldn't save your name (${error.code || error.message}).`, true);
+  }
+});
+
+$("rename-btn").addEventListener("click", () => {
+  $("name-input").value = myName();
+  $("name-card").classList.remove("hidden");
+  $("name-input").focus();
+});
+
+$("add-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
   const parsed = parseShare($("share-text").value);
   if (!parsed) {
     showMessage("add-message", "That doesn't look like a Wordle, Connections, Daily Tens or Krillion share.", true);
     return;
   }
   const date = $("add-date").value || today();
-  state.entries = addEntry(state.entries, { player, date, ...parsed });
-  save();
-  try { localStorage.setItem(LAST_PLAYER_KEY, player); } catch { /* ignore */ }
-  $("share-text").value = "";
-  $("day-date").value = date;
-  showMessage("add-message", `Saved ${GAMES[parsed.game].name} #${parsed.puzzle}: ${describeResult(parsed)} for ${player}.`);
-  renderAll();
+  try {
+    await saveResult(myName(), parsed, date);
+    $("share-text").value = "";
+    $("day-date").value = date;
+    showMessage("add-message", `Saved ${GAMES[parsed.game].name} #${parsed.puzzle}: ${describeResult(parsed)}.`);
+  } catch (error) {
+    showMessage("add-message", `Couldn't save it (${error.code || error.message}). Check your connection and try again.`, true);
+  }
 });
 
-$("day-view").addEventListener("click", (event) => {
+$("day-view").addEventListener("click", async (event) => {
   const key = event.target.dataset?.remove;
   if (!key) {
     return;
   }
-  const [player, game, date] = key.split("|");
-  state.entries = state.entries.filter((e) => !(e.player === player && e.game === game && e.date === date));
-  save();
-  renderAll();
+  const [game, date] = key.split("|");
+  try {
+    await removeResult(date, game);
+  } catch (error) {
+    showMessage("add-message", `Couldn't remove it (${error.code || error.message}).`, true);
+  }
 });
 
 $("day-date").addEventListener("change", renderDay);
 $("month-select").addEventListener("change", renderMonths);
 
 $("export-btn").addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const data = { exported: new Date().toISOString(), players: state.namesByUid, results: state.entries };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   link.download = `daily-scoreboard-${today()}.json`;
@@ -217,29 +207,32 @@ $("export-btn").addEventListener("click", () => {
   URL.revokeObjectURL(link.href);
 });
 
-$("import-file").addEventListener("change", async (event) => {
-  const file = event.target.files[0];
-  if (!file) {
-    return;
-  }
-  try {
-    const data = JSON.parse(await file.text());
-    if (!Array.isArray(data.players) || !Array.isArray(data.entries)) {
-      throw new Error("bad file");
-    }
-    state = { players: data.players, entries: data.entries };
-    save();
-    renderAll();
-    showMessage("data-message", `Imported ${data.entries.length} results.`);
-  } catch {
-    showMessage("data-message", "That file isn't a Daily Scoreboard backup.", true);
-  }
-  event.target.value = "";
-});
-
 // ---- Start ----
 
 $("add-date").value = today();
 $("day-date").value = today();
 renderGameLinks();
-renderAll();
+refresh();
+$("add-card").classList.add("hidden");
+
+connect({
+  onReady: (uid) => {
+    state.uid = uid;
+    setStatus("Live: everyone sees the same scoreboard", "live");
+    refresh();
+  },
+  onPlayers: (namesByUid) => {
+    state.namesByUid = namesByUid;
+    refresh();
+  },
+  onResults: (docs) => {
+    state.resultDocs = docs;
+    refresh();
+  },
+  onError: (error) => {
+    setStatus(`Can't reach the scoreboard right now (${error.code || error.message}).`, "error");
+  },
+});
+
+// Exposed for debugging in the browser console.
+window.scoreboard = { state, currentUid };
