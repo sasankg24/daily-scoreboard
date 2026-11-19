@@ -28,8 +28,8 @@ Version 1's parsers and scoring rules (PLAN.md, R1 to R6) carry over unchanged.
 
 ## Decisions still open
 
-- **Backend:** Firebase (Firestore + Hosting) or Supabase. Both have a free tier, live updates,
-  and simple auth. To decide in Week 2.
+- **Backend:** decided in Week 2: Firebase (Firestore with anonymous sign-in), site still on
+  GitHub Pages. Security rules are in `firestore.rules`.
 - **Identity:** a name picked once per phone with a group join code, or real sign-in. Simpler
   first; real sign-in only if the group needs it.
 - **AI model and where it runs:** a small serverless function holds the API key. Cost per

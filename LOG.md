@@ -38,3 +38,20 @@ Plans and changes, newest at the bottom. Anyone (or their agent) can add entries
   milestones, open decisions (backend, identity, AI model) and risks.
 - Next (Week 2): pick the backend, move results into a shared database, deploy, and get two
   friends submitting from their own phones.
+
+## 2026-11-18: Week 2, shared data
+- Picked Firebase for the backend (I used it before for BrandBridge): a new project
+  `daily-scoreboard` with anonymous sign-in and a Firestore database, Analytics and Gemini off.
+- Each phone now signs in anonymously, picks its name once, and submits its own results. The
+  scoreboard reads live from the database, so every phone sees the same thing without reloading.
+- Security: `firestore.rules` (published in the console, copy in the repo). Anyone signed in can
+  read; a phone can only write its own name and its own results, in exactly the expected shape.
+  I tried six ways to break it from the browser (writing as someone else, renaming someone,
+  extra fields, a wrong document id, an unknown game, deleting a player) and all were refused.
+- Tested with two separate browsers as two phones: the second saw the first one's results and
+  updated live when a new one was posted, and could not remove the first one's results.
+- New `src/records.js` (data shapes) with 6 tests; 24 tests pass. The local-only import was
+  removed, since everyone now writes their own results. Drafted with Claude.
+- Open: anyone with the link can join for now; a group join code is planned for Week 3. The day is
+  still picked when a result is entered, not taken from the puzzle number.
+- Next: send the link to the group and get two friends submitting from their own phones.
