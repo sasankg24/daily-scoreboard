@@ -49,6 +49,12 @@ export function connect({ onSignedIn, onSignedOut, onPlayers, onResults, onError
       onSignedOut();
       return;
     }
+    if (user.isAnonymous || !user.email) {
+      // A phone-only sign-in from before accounts existed: sign it out so the friend can sign
+      // in or create an account. Their earlier results stay on the scoreboard under their name.
+      firebaseSignOut(auth).catch(onError);
+      return;
+    }
     onSignedIn(user.uid, displayNameOf(user));
     unsubscribers.push(onSnapshot(collection(db, "players"), (snap) => {
       const names = {};
