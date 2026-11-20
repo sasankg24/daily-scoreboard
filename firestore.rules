@@ -1,8 +1,10 @@
 rules_version = '2';
 
 // Daily Scoreboard security rules.
-// Every phone signs in anonymously and gets its own uid. Anyone signed in can read the
-// scoreboard, but a phone can only write its own player name and its own results.
+// Every friend has an account: a name and a password. Firebase needs an email for that, so a
+// name maps to the private login address <name>@users.daily-scoreboard.app (src/records.js).
+// Anyone signed in can read the scoreboard; an account can only write its own name (which must
+// match its login) and its own results.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -10,22 +12,28 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function hasAccount() {
+      return signedIn() && request.auth.token.firebase.sign_in_provider == 'password';
+    }
+
     // players/{uid}: { name, joinedAt }
     match /players/{uid} {
       allow read: if signedIn();
-      allow create, update: if signedIn()
+      allow create, update: if hasAccount()
         && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(['name', 'joinedAt'])
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 1
-        && request.resource.data.name.size() <= 20;
+        && request.resource.data.name.size() <= 20
+        && request.resource.data.name.lower() + '@users.daily-scoreboard.app'
+             == request.auth.token.email;
       allow delete: if false;
     }
 
     // results/{date}_{game}_{uid}: one result per player, per game, per day.
     match /results/{resultId} {
       allow read: if signedIn();
-      allow create, update: if signedIn()
+      allow create, update: if hasAccount()
         && request.resource.data.uid == request.auth.uid
         && resultId == request.resource.data.date + '_' + request.resource.data.game
                        + '_' + request.auth.uid
@@ -37,7 +45,7 @@ service cloud.firestore {
         && request.resource.data.failed is bool
         && request.resource.data.player is string
         && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
-      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+      allow delete: if hasAccount() && resource.data.uid == request.auth.uid;
     }
   }
 }

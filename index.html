@@ -20,21 +20,29 @@
       <div id="game-links" class="game-links"></div>
     </section>
 
-    <section class="card hidden" id="name-card">
-      <h2>What's your name?</h2>
-      <p class="note">Pick the name your friends know you by. This phone remembers it, and only this phone can post results as you.</p>
-      <form id="name-form" class="row">
-        <input id="name-input" type="text" placeholder="Your name" maxlength="20" autocomplete="off" required>
-        <button type="submit">Save</button>
+    <section class="card hidden" id="signin-card">
+      <h2>Sign in</h2>
+      <p class="note">Use the same name and password on any phone or computer. New here? Pick a name your friends know you by and choose <strong>Create account</strong>.</p>
+      <form id="signin-form">
+        <label>Name
+          <input id="signin-name" type="text" maxlength="20" autocomplete="username" autocapitalize="off" spellcheck="false" required>
+        </label>
+        <label>Password
+          <input id="signin-password" type="password" autocomplete="current-password" required>
+        </label>
+        <div class="row">
+          <button type="submit" class="primary" id="signin-btn">Sign in</button>
+          <button type="button" class="ghost" id="signup-btn">Create account</button>
+        </div>
       </form>
-      <p id="name-message" class="message" role="status"></p>
+      <p id="signin-message" class="message" role="status"></p>
     </section>
 
     <section class="card" id="add-card">
       <h2>Add your result</h2>
       <form id="add-form">
-        <p class="playing-as">Playing as <strong id="me-name">…</strong>
-          <button type="button" id="rename-btn" class="small">change</button></p>
+        <p class="playing-as">Signed in as <strong id="me-name">…</strong>
+          <button type="button" id="signout-btn" class="small">sign out</button></p>
         <label>Day
           <input id="add-date" type="date" required>
         </label>
@@ -75,7 +83,7 @@
 
     <section class="card">
       <h2>Data</h2>
-      <p class="note">Results are shared with everyone in the group. You can only add or remove your own. Export saves a copy of everything to this device.</p>
+      <p class="note">Results are shared with everyone in the group. You can only add or remove your own, and only while signed in. Export saves a copy of everything to this device.</p>
       <div class="row wrap">
         <button type="button" id="export-btn" class="ghost">Export backup</button>
       </div>

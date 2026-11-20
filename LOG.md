@@ -62,3 +62,20 @@ Plans and changes, newest at the bottom. Anyone (or their agent) can add entries
 - Built name-and-password accounts (same name on any device) on the `accounts` branch, but held
   it back so friends could try the current version first. To switch over: test it, publish the
   stricter rules, merge, and turn off anonymous sign-in.
+
+## 2026-11-20: name-and-password accounts go live
+- Switched from phone-only anonymous sign-in to accounts: a name and a password that work on
+  any device. Firebase password sign-in needs an email, so each name maps to a private login
+  address (`<name>@users.daily-scoreboard.app`); nobody types it or gets mail there.
+- Rules now require a password account, and a player's name must match its own login, so nobody
+  can post under someone else's name. Tested from the browser: my own result and my own name were
+  allowed; renaming myself to an existing friend's name, posting for another account, extra
+  fields, an unknown game, deleting a player, and deleting a friend's result were all refused.
+- Found and fixed before release: a phone still signed in the old anonymous way stalled on
+  "Connecting". Old anonymous sign-ins are now signed out so the sign-in screen shows.
+- Results already posted stay on the scoreboard and still score under the same name once a friend
+  makes an account with that name. Duplicate names from the switch are listed once.
+- Tested end to end with a throwaway account (create, post, sign out, wrong password, sign back
+  in, short password, taken name), then deleted it. 27 tests pass.
+- Firebase showed 18 anonymous visitors over two days, against 3 who posted. Worth asking the
+  group what stopped the others.

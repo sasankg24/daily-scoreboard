@@ -3,13 +3,13 @@
 
 import { GAMES, parseShare, describeResult } from "./parsers.js";
 import { dayResults, monthStandings, monthsWithResults } from "./scoring.js";
-import { toEntries, nameProblem } from "./records.js";
-import { connect, currentUid, saveName, saveResult, removeResult } from "./store.js";
+import { toEntries, signUpProblem, authMessage, uniqueNames } from "./records.js";
+import { connect, currentUid, signUp, signIn, signOut, saveResult, removeResult } from "./store.js";
 
 const $ = (id) => document.getElementById(id);
 
 // Live state from the database.
-const state = { uid: null, namesByUid: {}, resultDocs: [], entries: [], players: [] };
+const state = { uid: null, signedOut: false, myName: "", namesByUid: {}, resultDocs: [], entries: [], players: [] };
 
 function today() {
   return new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
@@ -41,7 +41,7 @@ function monthLabel(month) {
 }
 
 function myName() {
-  return state.namesByUid[state.uid] || "";
+  return state.namesByUid[state.uid] || state.myName;
 }
 
 // ---- Rendering ----
@@ -53,10 +53,9 @@ function renderGameLinks() {
 }
 
 function renderName() {
-  const named = Boolean(myName());
-  // Until sign-in finishes, show neither card.
-  $("name-card").classList.toggle("hidden", !state.uid || named);
-  $("add-card").classList.toggle("hidden", !state.uid || !named);
+  // Before Firebase reports in, show neither card.
+  $("signin-card").classList.toggle("hidden", !state.signedOut);
+  $("add-card").classList.toggle("hidden", !state.uid);
   $("me-name").textContent = myName();
 }
 
@@ -132,7 +131,7 @@ function renderMonths() {
 }
 
 function refresh() {
-  state.players = Object.values(state.namesByUid).sort((a, b) => a.localeCompare(b));
+  state.players = uniqueNames(state.namesByUid);
   state.entries = toEntries(state.resultDocs, state.namesByUid);
   renderName();
   renderDay();
@@ -141,27 +140,44 @@ function refresh() {
 
 // ---- Events ----
 
-$("name-form").addEventListener("submit", async (event) => {
+function signInBusy(busy) {
+  $("signin-btn").disabled = busy;
+  $("signup-btn").disabled = busy;
+}
+
+$("signin-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const name = $("name-input").value.trim();
-  const problem = nameProblem(name, state.uid, state.namesByUid);
-  if (problem) {
-    showMessage("name-message", problem, true);
-    return;
-  }
+  signInBusy(true);
   try {
-    await saveName(name);
-    showMessage("name-message", "");
+    await signIn($("signin-name").value, $("signin-password").value);
+    showMessage("signin-message", "");
   } catch (error) {
-    showMessage("name-message", `Couldn't save your name (${error.code || error.message}).`, true);
+    showMessage("signin-message", authMessage(error.code), true);
+  } finally {
+    signInBusy(false);
   }
 });
 
-$("rename-btn").addEventListener("click", () => {
-  $("name-input").value = myName();
-  $("name-card").classList.remove("hidden");
-  $("name-input").focus();
+$("signup-btn").addEventListener("click", async () => {
+  const name = $("signin-name").value;
+  const password = $("signin-password").value;
+  const problem = signUpProblem(name, password);
+  if (problem) {
+    showMessage("signin-message", problem, true);
+    return;
+  }
+  signInBusy(true);
+  try {
+    await signUp(name, password);
+    showMessage("signin-message", "");
+  } catch (error) {
+    showMessage("signin-message", authMessage(error.code), true);
+  } finally {
+    signInBusy(false);
+  }
 });
+
+$("signout-btn").addEventListener("click", () => signOut());
 
 $("add-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -216,9 +232,21 @@ refresh();
 $("add-card").classList.add("hidden");
 
 connect({
-  onReady: (uid) => {
+  onSignedIn: (uid, name) => {
     state.uid = uid;
+    state.myName = name;
+    state.signedOut = false;
+    $("signin-password").value = "";
     setStatus("Live: everyone sees the same scoreboard", "live");
+    refresh();
+  },
+  onSignedOut: () => {
+    state.uid = null;
+    state.myName = "";
+    state.signedOut = true;
+    state.namesByUid = {};
+    state.resultDocs = [];
+    setStatus("Sign in to see the scoreboard.");
     refresh();
   },
   onPlayers: (namesByUid) => {
