@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resultId, toResultDoc, toEntries, loginEmail, signUpProblem, authMessage } from "../src/records.js";
+import { resultId, toResultDoc, toEntries, loginEmail, signUpProblem, authMessage, uniqueNames } from "../src/records.js";
 import { parseShare } from "../src/parsers.js";
 
 test("result id is date_game_uid, one per player per game per day", () => {
@@ -52,4 +52,8 @@ test("sign-in errors become plain messages", () => {
   assert.match(authMessage("auth/invalid-credential"), /don't match/);
   assert.match(authMessage("auth/email-already-in-use"), /already has that name/);
   assert.match(authMessage("auth/something-new"), /something-new/);
+});
+
+test("a friend with an old phone identity and a new account is listed once", () => {
+  assert.deepEqual(uniqueNames({ old: "Zach", acct: "Zach", me: "Sasank", x: "zach" }), ["Sasank", "Zach"]);
 });

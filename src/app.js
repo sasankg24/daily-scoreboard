@@ -3,7 +3,7 @@
 
 import { GAMES, parseShare, describeResult } from "./parsers.js";
 import { dayResults, monthStandings, monthsWithResults } from "./scoring.js";
-import { toEntries, signUpProblem, authMessage } from "./records.js";
+import { toEntries, signUpProblem, authMessage, uniqueNames } from "./records.js";
 import { connect, currentUid, signUp, signIn, signOut, saveResult, removeResult } from "./store.js";
 
 const $ = (id) => document.getElementById(id);
@@ -131,7 +131,7 @@ function renderMonths() {
 }
 
 function refresh() {
-  state.players = Object.values(state.namesByUid).sort((a, b) => a.localeCompare(b));
+  state.players = uniqueNames(state.namesByUid);
   state.entries = toEntries(state.resultDocs, state.namesByUid);
   renderName();
   renderDay();

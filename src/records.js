@@ -103,3 +103,19 @@ export function toEntries(resultDocs, namesByUid) {
       date: d.date,
     }));
 }
+
+/**
+ * The list of player names, one per name ignoring case. When a friend moves from an old
+ * phone-only identity to an account with the same name, both identities have that name; the
+ * scoreboard should list them once (their results already score together, by name).
+ */
+export function uniqueNames(namesByUid) {
+  const seen = new Map();
+  for (const name of Object.values(namesByUid)) {
+    const key = String(name).toLowerCase();
+    if (!seen.has(key)) {
+      seen.set(key, name);
+    }
+  }
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
+}
