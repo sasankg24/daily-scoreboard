@@ -55,3 +55,10 @@ Plans and changes, newest at the bottom. Anyone (or their agent) can add entries
 - Open: anyone with the link can join for now; a group join code is planned for Week 3. The day is
   still picked when a result is entered, not taken from the puzzle number.
 - Next: send the link to the group and get two friends submitting from their own phones.
+
+## 2026-11-19: first real use
+- Sent the link to the group. Three players joined from their own phones (me and two friends)
+  and posted 6 results across all four games on the first day. Week 2 milestone met.
+- Built name-and-password accounts (same name on any device) on the `accounts` branch, but held
+  it back so friends could try the current version first. To switch over: test it, publish the
+  stricter rules, merge, and turn off anonymous sign-in.
